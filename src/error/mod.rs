@@ -4,7 +4,8 @@ pub type ServerResult<T> = core::result::Result<T, ServerError>;
 
 #[derive(Debug)]
 pub enum ServerError {
-	LoginFail
+	LoginFail,
+	TicketDeleteFaiIdNotFound {id: u64}
 }
 
 impl IntoResponse for ServerError {

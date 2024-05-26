@@ -5,15 +5,22 @@ use serde::Deserialize;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
+use crate::models::ModelController;
+
 pub use self::error::{ServerError, ServerResult};
 
 mod error;
 mod web;
+mod models;
 #[tokio::main]
-async fn main() {
+async fn main() -> ServerResult<()> {
+    // Initialize ModelController;
+
+    let mc = ModelController::new().await?;
     let app = Router::new()
         .merge(routes_hello())
         .merge(web::routes_login::routes())
+        .nest("/api", web::routes_tickets::routes(mc.clone()))
         .layer(middleware::map_response(main_response_mapper))
         .layer(CookieManagerLayer::new())
         .fallback_service(routes_static());
@@ -23,6 +30,8 @@ async fn main() {
 
     println!("->> {:<12} on 0.0.0.0:3000", "LISTENING");
     axum::serve(listener, app.into_make_service()).await.unwrap();
+
+    Ok(())
 }
 
 async fn main_response_mapper(res: Response) -> Response {
